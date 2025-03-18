@@ -1,0 +1,27 @@
+{
+    "typescript": {
+        "semiColons": "asi",
+        "indentWidth": 4,
+        "quoteStyle": "preferSingle",
+        "spaceSurroundingProperties": false,
+        "importDeclaration.spaceSurroundingNamedImports": false,
+        "exportDeclaration.spaceSurroundingNamedExports": false,
+        "module.sortImportDeclarations": "maintain",
+        "importDeclaration.sortNamedImports": "maintain"
+    },
+    "markup": {
+        "printWidth": 180,
+        "indentWidth": 4,
+        "closingBracketSameLine": true,
+        "closingTagLineBreakForEmpty": "never"
+    },
+    "json": {
+        "indentWidth": 4
+    },
+    "excludes": ["**/node_modules", "bun.lock"],
+    "plugins": [
+        "https://plugins.dprint.dev/typescript-0.93.4.wasm",
+        "https://plugins.dprint.dev/json-0.19.4.wasm",
+        "https://plugins.dprint.dev/g-plane/markup_fmt-v0.19.0.wasm"
+    ]
+}

@@ -1,0 +1,9 @@
+services:
+  sync-server:
+    image: sync-server
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 31700:31700
+    environment:
+      - JWT_SECRET=${JWT_SECRET}

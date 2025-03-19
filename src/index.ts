@@ -6,12 +6,19 @@ import {jwtVerify} from 'jose'
 import path from 'path'
 import env from './env'
 
+type Doc = {
+    id: string
+    lastUpdate: number
+    [key: string]: any
+}
+type Collection = Record<string, Doc>
+
 const getUserDB = (user: string) => {
     // Sanitize username
     const safeUser = user.replace(/[^a-zA-Z0-9_-]/g, '')
     if (!safeUser || safeUser !== user) throw new Error('Invalid username format')
     const dbPath = path.resolve(path.join(env.DATA_DIR, `${safeUser}.json`))
-    return JSONFilePreset<Record<string, Record<string, any>>>(dbPath, {})
+    return JSONFilePreset<Record<string, Collection>>(dbPath, {})
 }
 
 const routes = new Elysia()
@@ -27,6 +34,7 @@ const routes = new Elysia()
         const list = []
         for (const collection in db.data) {
             for (const key in db.data[collection]) {
+                if (!db.data[collection][key]) continue
                 list.push({
                     key,
                     collection,
@@ -68,7 +76,12 @@ const routes = new Elysia()
             set.status = 404
             throw new Error('Collection not found')
         }
-        return db.data[collection][key]
+        const doc = db.data[collection][key]
+        if (!doc) {
+            set.status = 404
+            throw new Error('Document not found')
+        }
+        return doc
     }, {
         response: t.Object({
             id: t.String(),

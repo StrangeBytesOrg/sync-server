@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build Docker and Binary
 
 on:
   push:
@@ -9,7 +9,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  build-and-push:
+  build-docker-container:
     runs-on: ubuntu-latest
     
     permissions:
@@ -44,7 +44,7 @@ jobs:
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-  build-and-upload:
+  build-binary:
     runs-on: ubuntu-latest
 
     steps:
@@ -58,12 +58,12 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
-
-      - name: Compress Linux Binary
-        run: tar -cJf sync-server-x64.tar.gz sync-server
         
       - name: Build and upload Binary
         run: bun run build
+
+      - name: Compress Linux Binary
+        run: tar -cJf sync-server-x64.tar.gz sync-server
 
       - name: Upload Github Release Files
         uses: softprops/action-gh-release@v2

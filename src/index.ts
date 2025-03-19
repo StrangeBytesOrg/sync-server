@@ -90,9 +90,22 @@ const app = new Elysia()
     }))
     .use(routes)
 
-Bun.serve({
+const server = Bun.serve({
     fetch: app.fetch,
     port: env.PORT,
     development: false,
 })
-console.log(`Sync Server running on port ${env.PORT}`)
+console.log(`Sync Server running on port ${server.port}`)
+
+// Handle shutdown signals
+process.on('SIGINT', () => {
+    console.log('Received SIGINT, shutting down...')
+    server.stop()
+    process.exit(0)
+})
+
+process.on('SIGTERM', () => {
+    console.log('Received SIGTERM, shutting down...')
+    server.stop()
+    process.exit(0)
+})

@@ -13,7 +13,7 @@ JWT_SECRET=my-secure-secret ./sync-server
 ### Run with Docker
 
 ```shell
-docker run docker \
+docker run \
 -p 31700:31700 \
 -v ./sync-data:/data \
 -e DATA_DIR=/data \

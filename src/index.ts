@@ -90,7 +90,9 @@ const app = new Elysia()
     }))
     .use(routes)
 
-export default {
+Bun.serve({
     fetch: app.fetch,
     port: env.PORT,
-}
+    development: false,
+})
+console.log(`Sync Server running on port ${env.PORT}`)

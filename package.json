@@ -6,7 +6,8 @@
     "author": "Strange Bytes",
     "license": "MIT",
     "scripts": {
-        "dev": "bun run --watch ./src/index.ts"
+        "dev": "bun run --watch ./src/index.ts",
+        "build": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile sync-server"
     },
     "devDependencies": {
         "@types/bun": "latest",

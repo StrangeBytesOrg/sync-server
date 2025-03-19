@@ -1,9 +1,10 @@
 services:
   sync-server:
-    image: sync-server
-    build:
-      dockerfile: Dockerfile
+    image: ghcr.io/strangebytesorg/sync-server:latest
     ports:
       - 31700:31700
     environment:
       - JWT_SECRET=${JWT_SECRET}
+      - DATA_DIR=/data
+    volumes:
+      - ./sync-data:/data

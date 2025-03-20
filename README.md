@@ -8,7 +8,7 @@ Pre-built binaries are available on [Github](https://github.com/StrangeBytesOrg/
 The binary will load automatically use a `.env` in the current directory.
 
 ```shell
-JWT_SECRET=my-secure-secret ./sync-server
+PASSWORD=my-secure-password ./sync-server
 ```
 
 ### Run with Docker
@@ -18,8 +18,8 @@ docker run \
 -p 31700:31700 \
 -v ./sync-data:/data \
 -e DATA_DIR=/data \
--e JWT_SECRET=my-secure-secret \
+-e PASSWORD=my-secure-password \
 ghcr.io/strangebytesorg/sync-server:latest
 ```
 
-or using the included [compose.yml](./compose.yml) file.
+or use the included [compose.yml](./compose.yml) file

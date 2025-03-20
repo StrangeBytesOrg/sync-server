@@ -21,8 +21,8 @@ const getDb = () => {
 const routes = new Elysia()
     .guard({headers: t.Object({authorization: t.String()})})
     .derive(async ({headers, set}) => {
-        const token = headers.authorization.split(' ')[1]
-        if (token !== env.PASSWORD) {
+        const password = headers.authorization.split(' ')[1]
+        if (password !== env.PASSWORD) {
             set.status = 403
             throw new Error('Unauthorized')
         }

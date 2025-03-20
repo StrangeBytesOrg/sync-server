@@ -4,7 +4,7 @@ services:
     ports:
       - 31700:31700
     environment:
-      - JWT_SECRET=${JWT_SECRET}
+      - PASSWORD=${PASSWORD}
       - DATA_DIR=/data
     volumes:
       - ./sync-data:/data

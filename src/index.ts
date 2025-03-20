@@ -2,7 +2,6 @@ import {Elysia, t} from 'elysia'
 import {cors} from '@elysiajs/cors'
 import {swagger} from '@elysiajs/swagger'
 import {JSONFilePreset} from 'lowdb/node'
-import {jwtVerify} from 'jose'
 import path from 'path'
 import env from './env'
 import pkg from '../package.json'
@@ -14,24 +13,22 @@ type Doc = {
 }
 type Collection = Record<string, Doc>
 
-const getUserDB = (user: string) => {
-    // Sanitize username
-    const safeUser = user.replace(/[^a-zA-Z0-9_-]/g, '')
-    if (!safeUser || safeUser !== user) throw new Error('Invalid username format')
-    const dbPath = path.resolve(path.join(env.DATA_DIR, `${safeUser}.json`))
+const getDb = () => {
+    const dbPath = path.resolve(path.join(env.DATA_DIR, `db.json`))
     return JSONFilePreset<Record<string, Collection>>(dbPath, {})
 }
 
 const routes = new Elysia()
-    .guard({headers: t.Object({token: t.String()})})
-    .derive(async ({headers}) => {
-        const secret = new TextEncoder().encode(env.JWT_SECRET)
-        const {payload} = await jwtVerify(headers.token, secret, {requiredClaims: ['sub']})
-        if (!payload.sub) throw new Error('Invalid token')
-        return {user: payload.sub}
+    .guard({headers: t.Object({authorization: t.String()})})
+    .derive(async ({headers, set}) => {
+        const token = headers.authorization.split(' ')[1]
+        if (token !== env.PASSWORD) {
+            set.status = 403
+            throw new Error('Unauthorized')
+        }
     })
-    .get('/list', async ({user}) => {
-        const db = await getUserDB(user)
+    .get('/list', async () => {
+        const db = await getDb()
         const list = []
         for (const collection in db.data) {
             for (const key in db.data[collection]) {
@@ -51,9 +48,9 @@ const routes = new Elysia()
             lastUpdate: t.Number(),
         })),
     })
-    .put('/upload/', async ({body, user}) => {
+    .put('/upload/', async ({body}) => {
         const {key, collection, doc} = body
-        const db = await getUserDB(user)
+        const db = await getDb()
         if (!db.data[collection]) {
             db.data[collection] = {}
         }
@@ -70,9 +67,9 @@ const routes = new Elysia()
             }),
         }, {additionalProperties: true}),
     })
-    .get('/download/:collection/:key', async ({params, user, set}) => {
+    .get('/download/:collection/:key', async ({params, set}) => {
         const {key, collection} = params
-        const db = await getUserDB(user)
+        const db = await getDb()
         if (!db.data[collection]) {
             set.status = 404
             throw new Error('Collection not found')

@@ -3,7 +3,7 @@ import {z} from 'zod'
 
 export default createEnv({
     server: {
-        JWT_SECRET: z.string(),
+        PASSWORD: z.string(),
         DATA_DIR: z.string().default('./data'),
         PORT: z.string()
             .transform((v) => parseInt(v, 10))

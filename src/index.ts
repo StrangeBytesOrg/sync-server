@@ -5,6 +5,7 @@ import {JSONFilePreset} from 'lowdb/node'
 import {jwtVerify} from 'jose'
 import path from 'path'
 import env from './env'
+import pkg from '../package.json'
 
 type Doc = {
     id: string
@@ -108,7 +109,8 @@ const server = Bun.serve({
     port: env.PORT,
     development: false,
 })
-console.log(`Sync Server running on port ${server.port}`)
+console.log(`Cybermuse Sync Server - version ${pkg.version}`)
+console.log(`running on port ${server.port}`)
 
 // Handle shutdown signals
 process.on('SIGINT', () => {

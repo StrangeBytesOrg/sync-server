@@ -4,6 +4,7 @@ Syncing for Cybermuse clients
 ## Running Locally
 ### Pre-built Binaries
 Pre-built binaries are available on [Github](https://github.com/StrangeBytesOrg/sync-server/releases)
+
 The binary will load automatically use a `.env` in the current directory.
 
 ```shell

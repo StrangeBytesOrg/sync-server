@@ -18,7 +18,7 @@
     "json": {
         "indentWidth": 4
     },
-    "excludes": ["**/node_modules", "bun.lock"],
+    "excludes": ["**/node_modules", "bun.lock", "db.json"],
     "plugins": [
         "https://plugins.dprint.dev/typescript-0.93.4.wasm",
         "https://plugins.dprint.dev/json-0.19.4.wasm",

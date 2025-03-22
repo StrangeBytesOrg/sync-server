@@ -37,6 +37,7 @@ const routes = new Elysia()
                     key,
                     collection,
                     lastUpdate: db.data[collection][key].lastUpdate,
+                    deleted: db.data[collection][key].deleted,
                 })
             }
         }
@@ -46,26 +47,31 @@ const routes = new Elysia()
             key: t.String(),
             collection: t.String(),
             lastUpdate: t.Number(),
+            deleted: t.Optional(t.Number()),
         })),
     })
-    .put('/upload/', async ({body}) => {
-        const {key, collection, doc} = body
+    .put('/upload', async ({body}) => {
         const db = await getDb()
-        if (!db.data[collection]) {
-            db.data[collection] = {}
+        for (const item of body) {
+            const {key, collection, doc} = item
+            if (!db.data[collection]) {
+                db.data[collection] = {}
+            }
+            db.data[collection][key] = doc
         }
-        db.data[collection][key] = doc
         await db.write()
         return {success: true}
     }, {
-        body: t.Object({
-            key: t.String(),
-            collection: t.String(),
-            doc: t.Object({
-                id: t.String(),
-                lastUpdate: t.Number(),
+        body: t.Array(
+            t.Object({
+                key: t.String(),
+                collection: t.String(),
+                doc: t.Object({
+                    id: t.String(),
+                    lastUpdate: t.Number(),
+                }, {additionalProperties: true}),
             }),
-        }, {additionalProperties: true}),
+        ),
     })
     .get('/download/:collection/:key', async ({params, set}) => {
         const {key, collection} = params

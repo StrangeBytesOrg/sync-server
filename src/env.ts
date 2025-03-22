@@ -4,7 +4,7 @@ import {z} from 'zod'
 export default createEnv({
     server: {
         PASSWORD: z.string(),
-        DATA_DIR: z.string().default('./data'),
+        DATA_DIR: z.string().default('./'),
         PORT: z.string()
             .transform((v) => parseInt(v, 10))
             .pipe(z.number())

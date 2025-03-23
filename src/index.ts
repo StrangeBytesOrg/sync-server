@@ -66,10 +66,13 @@ const routes = new Elysia()
             t.Object({
                 key: t.String(),
                 collection: t.String(),
-                doc: t.Object({
-                    id: t.String(),
-                    lastUpdate: t.Number(),
-                }, {additionalProperties: true}),
+                doc: t.Intersect([
+                    t.Object({
+                        id: t.String(),
+                        lastUpdate: t.Number(),
+                    }),
+                    t.Record(t.String(), t.Any()),
+                ]),
             }),
         ),
     })

@@ -19,13 +19,12 @@ const getDb = () => {
     return JSONFilePreset<Record<string, Collection>>(dbPath, {})
 }
 
-const routes = new Elysia()
+const routes = new Elysia({tags: ['Sync']})
     .use(bearer())
     .guard({detail: {security: [{bearerAuth: []}]}})
-    .derive(async ({bearer, set}) => {
+    .derive(async ({bearer, error}) => {
         if (!bearer || bearer !== env.PASSWORD) {
-            set.status = 403
-            throw new Error('Unauthorized')
+            return error(403, 'Unauthorized')
         }
     })
     .get('/list', async () => {
@@ -77,24 +76,25 @@ const routes = new Elysia()
             }),
         ),
     })
-    .get('/download/:collection/:key', async ({params, set}) => {
+    .get('/download/:collection/:key', async ({params, error}) => {
         const {key, collection} = params
         const db = await getDb()
         if (!db.data[collection]) {
-            set.status = 404
-            throw new Error('Collection not found')
+            return error(404, 'Collection not found')
         }
         const doc = db.data[collection][key]
         if (!doc) {
-            set.status = 404
-            throw new Error('Document not found')
+            return error(404, 'Document not found')
         }
         return doc
     }, {
-        response: t.Object({
-            id: t.String(),
-            lastUpdate: t.Number(),
-        }, {additionalProperties: true}),
+        response: {
+            200: t.Object({
+                id: t.String(),
+                lastUpdate: t.Number(),
+            }, {additionalProperties: true}),
+            404: t.String(),
+        },
     })
 
 const app = new Elysia()
@@ -105,7 +105,7 @@ const app = new Elysia()
         documentation: {
             info: {
                 title: 'Cybermuse Sync Server',
-                version: '0.1.0',
+                version: pkg.version,
             },
             components: {
                 securitySchemes: {

@@ -21,6 +21,7 @@
         "typescript": "^5.8.2"
     },
     "dependencies": {
+        "@elysiajs/bearer": "^1.2.0",
         "@elysiajs/cors": "^1.2.0",
         "@elysiajs/swagger": "^1.2.2",
         "@t3-oss/env-core": "^0.12.0",

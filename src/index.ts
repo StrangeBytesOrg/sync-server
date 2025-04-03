@@ -1,6 +1,7 @@
 import {Elysia, t} from 'elysia'
 import {cors} from '@elysiajs/cors'
 import {swagger} from '@elysiajs/swagger'
+import {bearer} from '@elysiajs/bearer'
 import {JSONFilePreset} from 'lowdb/node'
 import path from 'path'
 import env from './env'
@@ -19,10 +20,10 @@ const getDb = () => {
 }
 
 const routes = new Elysia()
-    .guard({headers: t.Object({authorization: t.String()})})
-    .derive(async ({headers, set}) => {
-        const password = headers.authorization.split(' ')[1]
-        if (password !== env.PASSWORD) {
+    .use(bearer())
+    .guard({detail: {security: [{bearerAuth: []}]}})
+    .derive(async ({bearer, set}) => {
+        if (!bearer || bearer !== env.PASSWORD) {
             set.status = 403
             throw new Error('Unauthorized')
         }
@@ -106,6 +107,18 @@ const app = new Elysia()
                 title: 'Cybermuse Sync Server',
                 version: '0.1.0',
             },
+            components: {
+                securitySchemes: {
+                    bearerAuth: {
+                        type: 'http',
+                        scheme: 'bearer',
+                    },
+                },
+            },
+        },
+        swaggerOptions: {
+            persistAuthorization: true,
+            tryItOutEnabled: true,
         },
     }))
     .use(routes)

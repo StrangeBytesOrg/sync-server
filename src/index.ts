@@ -8,18 +8,14 @@ import env from './env'
 import pkg from '../package.json'
 
 type Doc = {
-    id: string
     lastUpdate: number
     version: number
     [key: string]: any
 }
 type Deletion = {
-    id: string
-    collection: string
     deletedAt: number
 }
-type Collection = Record<string, Doc>
-type DB = {documents: Record<string, Collection>; deletions: Record<string, Deletion>}
+type DB = {documents: Record<string, Doc>; deletions: Record<string, Deletion>}
 
 const getDb = () => {
     const dbPath = path.resolve(path.join(env.DATA_DIR, `db.json`))
@@ -36,59 +32,41 @@ const routes = new Elysia({tags: ['Sync']})
     })
     .get('/list', async () => {
         const db = await getDb()
-        const list = []
-        for (const collection in db.data.documents) {
-            for (const key in db.data.documents[collection]) {
-                if (!db.data.documents[collection][key]) continue
-                list.push({
-                    key,
-                    collection,
-                    lastUpdate: db.data.documents[collection][key].lastUpdate,
-                    version: db.data.documents[collection][key].version || 0,
-                })
-            }
+        return {
+            documents: Object.entries(db.data.documents).map(([key, doc]) => ({
+                key,
+                lastUpdate: doc.lastUpdate,
+                version: doc.version || 0,
+            })),
+            deletions: Object.entries(db.data.deletions).map(([key, {deletedAt}]) => ({
+                key,
+                deletedAt,
+            })),
         }
-        const deletions = []
-        for (const key in db.data.deletions) {
-            if (!db.data.deletions[key]) continue
-            deletions.push({
-                id: db.data.deletions[key].id,
-                collection: db.data.deletions[key].collection,
-                deletedAt: db.data.deletions[key].deletedAt,
-            })
-        }
-        return {documents: list, deletions}
     }, {
         response: t.Object({
             documents: t.Array(t.Object({
                 key: t.String(),
-                collection: t.String(),
                 lastUpdate: t.Number(),
                 version: t.Number(),
             })),
             deletions: t.Array(t.Object({
-                id: t.String(),
-                collection: t.String(),
+                key: t.String(),
                 deletedAt: t.Number(),
             })),
         }),
     })
     .put('/upload', async ({body}) => {
         const db = await getDb()
-        const documents = db.data.documents
-        for (const {key, collection, doc} of body.documents) {
-            if (!documents[collection]) {
-                documents[collection] = {}
-            }
-            documents[collection][key] = doc
+        for (const {key, doc} of body.documents) {
+            db.data.documents[key] = doc
         }
-        // Process deletions
-        for (const {id, collection, deletedAt} of body.deletions) {
-            if (documents[collection] && documents[collection][id]) {
-                delete documents[collection][id]
+        for (const {key, deletedAt} of body.deletions) {
+            if (db.data.documents[key]) {
+                delete db.data.documents[key]
             }
-            if (!db.data.deletions[id]) {
-                db.data.deletions[id] = {id, collection, deletedAt}
+            if (!db.data.deletions[key]) {
+                db.data.deletions[key] = {deletedAt}
             }
         }
         await db.write()
@@ -97,7 +75,6 @@ const routes = new Elysia({tags: ['Sync']})
         body: t.Object({
             documents: t.Array(t.Object({
                 key: t.String(),
-                collection: t.String(),
                 doc: t.Intersect([
                     t.Object({
                         id: t.String(),
@@ -108,29 +85,21 @@ const routes = new Elysia({tags: ['Sync']})
                 ]),
             })),
             deletions: t.Array(t.Object({
-                id: t.String(),
-                collection: t.String(),
+                key: t.String(),
                 deletedAt: t.Number(),
             })),
         }),
     })
-    .get('/download/:collection/:key', async ({params, error}) => {
-        const {key, collection} = params
+    .get('/download/:key', async ({params, error}) => {
+        const key = decodeURIComponent(params.key)
         const db = await getDb()
-        const documents = db.data.documents
-        if (!documents[collection]) {
-            return error(404, 'Collection not found')
-        }
-        const doc = documents[collection][key]
-        if (!doc) {
-            return error(404, 'Document not found')
-        }
+        const doc = db.data.documents[key]
+        if (!doc) return error(404, 'Document not found')
         doc.version = doc.version || 0
         return doc
     }, {
         response: {
             200: t.Object({
-                id: t.String(),
                 lastUpdate: t.Number(),
                 version: t.Number(),
             }, {additionalProperties: true}),

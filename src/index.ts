@@ -36,7 +36,7 @@ const routes = new Elysia({tags: ['Sync']})
             documents: Object.entries(db.data.documents).map(([key, doc]) => ({
                 key,
                 lastUpdate: doc.lastUpdate,
-                version: doc.version || 0,
+                version: doc.version,
             })),
             deletions: Object.entries(db.data.deletions).map(([key, {deletedAt}]) => ({
                 key,
@@ -95,7 +95,6 @@ const routes = new Elysia({tags: ['Sync']})
         const db = await getDb()
         const doc = db.data.documents[key]
         if (!doc) return error(404, 'Document not found')
-        doc.version = doc.version || 0
         return doc
     }, {
         response: {
@@ -103,6 +102,30 @@ const routes = new Elysia({tags: ['Sync']})
                 lastUpdate: t.Number(),
                 version: t.Number(),
             }, {additionalProperties: true}),
+            404: t.String(),
+        },
+    })
+    .post('/download', async ({body, error}) => {
+        const db = await getDb()
+        const documents = []
+        for (const key of body.keys) {
+            const doc = db.data.documents[key]
+            if (!doc) return error(404, `Document not found: ${key}`)
+            documents.push({key, document: doc})
+        }
+        return documents
+    }, {
+        body: t.Object({
+            keys: t.Array(t.String()),
+        }),
+        response: {
+            200: t.Array(t.Object({
+                key: t.String(),
+                document: t.Object({
+                    lastUpdate: t.Number(),
+                    version: t.Number(),
+                }, {additionalProperties: true}),
+            })),
             404: t.String(),
         },
     })

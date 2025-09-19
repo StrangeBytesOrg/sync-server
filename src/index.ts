@@ -56,38 +56,26 @@ const routes = new Elysia({tags: ['Sync']})
             })),
         }),
     })
-    .put('/upload', async ({body}) => {
+    .put('/upload', async ({body, error}) => {
         const db = await getDb()
-        for (const {key, doc} of body.documents) {
-            db.data.documents[key] = doc
+        const {key, doc} = body
+        if (!key || !doc || typeof key !== 'string' || typeof doc !== 'object') {
+            return error(400, 'Invalid request body')
         }
-        for (const {key, deletedAt} of body.deletions) {
-            if (db.data.documents[key]) {
-                delete db.data.documents[key]
-            }
-            if (!db.data.deletions[key]) {
-                db.data.deletions[key] = {deletedAt}
-            }
-        }
+        db.data.documents[key] = doc
         await db.write()
         return {success: true}
     }, {
         body: t.Object({
-            documents: t.Array(t.Object({
-                key: t.String(),
-                doc: t.Intersect([
-                    t.Object({
-                        id: t.String(),
-                        lastUpdate: t.Number(),
-                        version: t.Number(),
-                    }),
-                    t.Record(t.String(), t.Any()),
-                ]),
-            })),
-            deletions: t.Array(t.Object({
-                key: t.String(),
-                deletedAt: t.Number(),
-            })),
+            key: t.String(),
+            doc: t.Intersect([
+                t.Object({
+                    id: t.String(),
+                    lastUpdate: t.Number(),
+                    version: t.Number(),
+                }),
+                t.Record(t.String(), t.Any()),
+            ]),
         }),
     })
     .get('/download/:key', async ({params, error}) => {
@@ -128,6 +116,23 @@ const routes = new Elysia({tags: ['Sync']})
             })),
             404: t.String(),
         },
+    })
+    .delete('/', async ({body}) => {
+        const db = await getDb()
+        const {key, deletedAt} = body
+        if (db.data.documents[key]) {
+            delete db.data.documents[key]
+        }
+        if (!db.data.deletions[key]) {
+            db.data.deletions[key] = {deletedAt}
+        }
+        await db.write()
+        return {success: true}
+    }, {
+        body: t.Object({
+            key: t.String(),
+            deletedAt: t.Number(),
+        }),
     })
 
 const app = new Elysia()

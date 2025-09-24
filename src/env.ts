@@ -9,6 +9,10 @@ export default createEnv({
             .transform((v) => parseInt(v, 10))
             .pipe(z.number())
             .default('31700'),
+        MAX_UPLOAD_SIZE: z.string()
+            .transform((v) => parseInt(v, 10))
+            .pipe(z.number())
+            .default('10'), // 10MB default
     },
     runtimeEnv: process.env,
     isServer: true,

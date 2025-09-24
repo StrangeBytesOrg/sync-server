@@ -62,6 +62,12 @@ const routes = new Elysia({tags: ['Sync']})
         if (!key || !doc || typeof key !== 'string' || typeof doc !== 'object') {
             return error(400, 'Invalid request body')
         }
+
+        const docSize = Buffer.byteLength(JSON.stringify(doc), 'utf8') / 1024 / 1024 // size in MB
+        if (docSize > env.MAX_UPLOAD_SIZE) {
+            return error(413, `Document too large: ${docSize.toFixed(2)}MB (max: ${env.MAX_UPLOAD_SIZE}MB)`)
+        }
+
         db.data.documents[key] = doc
         await db.write()
         return {success: true}
@@ -77,6 +83,11 @@ const routes = new Elysia({tags: ['Sync']})
                 t.Record(t.String(), t.Any()),
             ]),
         }),
+        response: {
+            200: t.Object({success: t.Boolean()}),
+            400: t.String(),
+            413: t.String(),
+        },
     })
     .get('/download/:key', async ({params, error}) => {
         const key = decodeURIComponent(params.key)
